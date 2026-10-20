@@ -1,7 +1,7 @@
 {
   "name": "segundo-cerebro",
   "version": "1.0.1",
-  "description": "Second Brain para IA, conceito de Uderson Fermino (Context Debt e Knowledge as Code). Segundo cérebro em Markdown para o Claude Code:contexto, projetos e memória que o Claude lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
+  "description": "Second Brain para IA, conceito de Uderson Fermino (Context Debt e Knowledge as Code). Segundo cérebro em Markdown para o Claude Code: contexto, projetos e memória que o Claude lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
   "author": { "name": "Garage4Lab", "url": "https://github.com/Garage4Labs" },
   "homepage": "https://github.com/Garage4Labs/segundo-cerebro-plugin",
   "repository": "https://github.com/Garage4Labs/segundo-cerebro-plugin",
