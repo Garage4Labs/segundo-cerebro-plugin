@@ -4,7 +4,50 @@ Um plugin que dá memória de longo prazo ao Claude Code. Ele cria uma pasta em 
 você é, seus projetos e suas decisões. O Claude lê essa pasta antes de trabalhar, atualiza depois e
 publica sozinho no git. Você para de repetir contexto em toda conversa e para de perder decisões no histórico do chat.
 
-Feito pela [Garage4Lab](https://github.com/Garage4Labs), em português.
+> **Conceito e autoria:** Uderson Fermino · **Implementação:** [Garage4Lab](https://github.com/Garage4Labs) · em português
+
+## O conceito
+
+> *"Estamos construindo agentes de IA cada vez mais inteligentes, mas nossas organizações continuam
+> esquecendo aquilo que aprenderam."*
+> — Uderson Fermino
+
+Este plugin é a implementação prática do **Second Brain para IA**, conceito criado por **Uderson Fermino**,
+fundador da Garage4Lab. A pergunta que o originou: a nossa capacidade de preservar conhecimento está
+evoluindo na mesma velocidade que a nossa capacidade de automatizar decisões?
+
+O conceito se apoia em duas ideias, propostas pelo autor.
+
+### Dívida de Contexto (Context Debt)
+
+Assim como acumulamos dívida técnica, acumulamos uma dívida invisível quando deixamos de documentar
+decisões, preservar aprendizados e registrar o raciocínio que sustenta arquiteturas e processos.
+Ela aparece quando é preciso reconstruir a história de um projeto, repetir um diagnóstico ou explicar
+de novo o que a organização já deveria saber. Agentes de IA ampliam esse problema: cada conversa
+começa do zero.
+
+### Conhecimento como código (Knowledge as Code)
+
+A proposta é aplicar ao conhecimento os princípios que a engenharia de software já domina:
+**versionamento, rastreabilidade, revisão, automação e governança**. Na prática, um Second Brain com o
+GitHub como base de uma memória persistente, estruturada e compartilhável entre agentes diferentes.
+Assim o conhecimento sobrevive às conversas, aos modelos e até às mudanças de tecnologia.
+
+> *"Talvez estejamos investindo milhões na inteligência dos agentes enquanto continuamos acumulando uma
+> dívida sobre aquilo que nossas organizações já aprenderam. De que adianta termos agentes capazes de
+> pensar e executar se eles não conseguem compreender por que fizemos o que fizemos?"*
+> — Uderson Fermino
+
+### Como o plugin traduz o conceito
+
+| Princípio | No plugin |
+|---|---|
+| Versionamento | todo o cérebro é Markdown num repositório git |
+| Rastreabilidade | `decisoes.md` guarda cada decisão com data e **porquê**; `log.md`, cada tarefa |
+| Revisão | a skill `revisar-cerebro` organiza o inbox, atualiza fichas e expõe contradições |
+| Automação | os hooks conferem a memória e publicam ao fim de cada resposta do Claude |
+| Governança | o Claude não encerra com trabalho sem registro e não publica segredos |
+| Compartilhável entre agentes | as mesmas instruções vão para `CLAUDE.md` e `AGENTS.md` (Codex e outros) |
 
 ## O que muda na prática
 
@@ -129,6 +172,9 @@ claude plugin validate .          # valida o marketplace e o plugin
 claude --plugin-dir .             # testa o plugin local sem instalar
 ```
 
-## Licença
+## Autoria e licença
 
-MIT. Veja [LICENSE](LICENSE).
+O conceito de **Second Brain para IA**, com **Dívida de Contexto** e **Knowledge as Code**, é de
+**Uderson Fermino**. Ao usar, adaptar ou citar este trabalho, credite o autor do conceito.
+
+Código sob licença MIT, © 2026 Garage4Lab. Veja [LICENSE](LICENSE).
