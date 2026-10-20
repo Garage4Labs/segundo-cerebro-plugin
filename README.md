@@ -1,7 +1,7 @@
-# Segundo cérebro para o Claude Code
+# Segundo cérebro para agentes de IA
 
-Um plugin que dá memória de longo prazo ao Claude Code. Ele cria uma pasta em Markdown com quem
-você é, seus projetos e suas decisões. O Claude lê essa pasta antes de trabalhar, atualiza depois e
+Um plugin que dá memória de longo prazo ao Claude Code, Codex, Cursor e Hermes. Ele cria uma pasta em
+Markdown com quem você é, seus projetos e suas decisões. O agente lê essa pasta antes de trabalhar, atualiza depois e
 publica sozinho no git. Você para de repetir contexto em toda conversa e para de perder decisões no histórico do chat.
 
 > **Conceito e autoria:** Uderson Fermino · **Implementação:** [Garage4Lab](https://github.com/Garage4Labs) · em português
@@ -45,44 +45,88 @@ Assim o conhecimento sobrevive às conversas, aos modelos e até às mudanças d
 | Versionamento | todo o cérebro é Markdown num repositório git |
 | Rastreabilidade | `decisoes.md` guarda cada decisão com data e **porquê**; `log.md`, cada tarefa |
 | Revisão | a skill `revisar-cerebro` organiza o inbox, atualiza fichas e expõe contradições |
-| Automação | os hooks conferem a memória e publicam ao fim de cada resposta do Claude |
-| Governança | o Claude não encerra com trabalho sem registro e não publica segredos |
-| Compartilhável entre agentes | as mesmas instruções vão para `CLAUDE.md` e `AGENTS.md` (Codex e outros) |
+| Automação | os hooks conferem a memória e publicam ao fim de cada resposta do agente |
+| Governança | o agente não encerra com trabalho sem registro e não publica segredos |
+| Compartilhável entre agentes | o mesmo cérebro, as mesmas skills e os mesmos hooks no Claude Code, Codex, Cursor e Hermes |
 
 ## O que muda na prática
 
 | Sem segundo cérebro | Com segundo cérebro |
 |---|---|
-| Toda conversa começa do zero: "somos uma empresa de…" | O Claude já sabe quem você é, para quem fala e como fala |
-| A decisão de três semanas atrás se perde no histórico | `decisoes.md` guarda a decisão com o porquê, e o Claude confere antes de propor algo |
+| Toda conversa começa do zero: "somos uma empresa de…" | O agente já sabe quem você é, para quem fala e como fala |
+| A decisão de três semanas atrás se perde no histórico | `decisoes.md` guarda a decisão com o porquê, e o agente confere antes de propor algo |
 | Você precisa lembrar de salvar, commitar e fazer backup | Ao fim de cada resposta, o hook confere e publica sozinho |
 | Ninguém sabe o que foi feito ontem | `log.md` tem uma linha por tarefa, com data |
 
+## Funciona em
+
+O cérebro é Markdown num repositório git, então não pertence a nenhuma ferramenta: o mesmo projeto pode
+ser usado no Claude Code de manhã e no Cursor à tarde, e a memória é uma só.
+
+| Ferramenta | Como instala | Skills | Hooks (conferir e publicar) | Instruções lidas |
+|---|---|---|---|---|
+| **Claude Code** | plugin | ✅ | ✅ início de sessão e fim de resposta | `CLAUDE.md` |
+| **Codex** | o mesmo plugin | ✅ | ✅ início de sessão e fim de resposta | `AGENTS.md` |
+| **Cursor** | instalador | ✅ | ✅ início de sessão e fim de resposta | `AGENTS.md` |
+| **Hermes** | instalador | ✅ | ✅ fim de resposta (o pedido de correção vale quando a resposta editou arquivos) | `AGENTS.md` |
+| Outros (Gemini CLI, Copilot…) | nenhum | — | — (rode a conferência à mão) | `AGENTS.md` |
+
+Requisitos para todos: Node.js 18+ e git.
+
 ## Instalar
 
-No Claude Code:
+### Claude Code
 
 ```
 /plugin marketplace add Garage4Labs/segundo-cerebro-plugin
 /plugin install segundo-cerebro@segundo-cerebro
 ```
 
-Ou pelo terminal:
+Ou no terminal: `claude plugin marketplace add Garage4Labs/segundo-cerebro-plugin` e
+`claude plugin install segundo-cerebro@segundo-cerebro`.
+
+### Codex
+
+O Codex lê o mesmo plugin:
 
 ```bash
-claude plugin marketplace add Garage4Labs/segundo-cerebro-plugin
-claude plugin install segundo-cerebro@segundo-cerebro
+codex plugin marketplace add Garage4Labs/segundo-cerebro-plugin
+codex plugin add segundo-cerebro@segundo-cerebro
 ```
 
-Requisitos: [Claude Code](https://claude.com/claude-code), Node.js 18+ e git.
+Na primeira sessão, aprove os hooks do plugin em `/hooks` (o Codex não roda hook sem revisão).
+
+### Cursor e Hermes
+
+Um instalador clona o repositório em `~/.segundo-cerebro`, copia as skills e registra os hooks no
+formato de cada ferramenta. Ele detecta sozinho quais delas estão instaladas e preserva os hooks que já existiam.
+
+```bash
+# macOS ou Linux
+curl -fsSL https://raw.githubusercontent.com/Garage4Labs/segundo-cerebro-plugin/main/instalar.sh | bash
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/Garage4Labs/segundo-cerebro-plugin/main/instalar.ps1 | iex
+```
+
+| | Skills | Hooks |
+|---|---|---|
+| Cursor | `~/.cursor/skills/segundo-cerebro-*` | `~/.cursor/hooks.json` (`sessionStart` e `stop`) |
+| Hermes | `<HERMES_HOME>/skills/segundo-cerebro/` | `config.yaml` (`pre_llm_call`, `pre_verify`, `post_llm_call`) |
+
+No Hermes, aprove os hooks na primeira sessão (ou rode `hermes --accept-hooks`); `hermes hooks list` mostra o estado.
+Para atualizar, rode o instalador de novo. Para desfazer, use `bash -s -- --remover` no macOS ou Linux, ou
+`$env:SEGUNDO_CEREBRO_ARGS='--remover'` antes do comando no Windows.
 
 ## Usar
 
-Abra o Claude Code na pasta do seu projeto (ou numa pasta vazia, só para o cérebro) e peça:
+Abra o agente na pasta do seu projeto (ou numa pasta vazia, só para o cérebro) e peça:
 
 > cria um segundo cérebro aqui
 
-O Claude faz três ou quatro perguntas (nome, onde publicar), monta a pasta e entrevista você
+O agente faz três ou quatro perguntas (nome, onde publicar), monta a pasta e entrevista você
 rapidamente para preencher o contexto. Daí em diante, três frases resolvem o dia a dia:
 
 | Você diz | O que acontece | Skill |
@@ -91,8 +135,9 @@ rapidamente para preencher o contexto. Daí em diante, três frases resolvem o d
 | "o que já decidimos sobre preço?" | procura nas decisões, fichas e log e responde com as datas | `registrar` |
 | "revisa o segundo cérebro" | esvazia o inbox, atualiza fichas e lista lacunas | `revisar-cerebro` |
 
-As skills também ficam disponíveis como comando: `/segundo-cerebro:criar-cerebro`,
-`/segundo-cerebro:registrar` e `/segundo-cerebro:revisar-cerebro`.
+No Claude Code e no Codex, as skills também ficam disponíveis como comando: `/segundo-cerebro:criar-cerebro`,
+`/segundo-cerebro:registrar` e `/segundo-cerebro:revisar-cerebro`. No Cursor e no Hermes, elas se chamam
+`segundo-cerebro-criar-cerebro`, `segundo-cerebro-registrar` e `segundo-cerebro-revisar-cerebro`.
 
 ## A estrutura
 
@@ -107,25 +152,27 @@ segundo-cerebro/
 └── arquivo/      o que foi encerrado
 ```
 
-Além da pasta, o plugin escreve um bloco de instruções no `CLAUDE.md` (entre marcadores, sem mexer no
-resto do arquivo) e cria `.segundo-cerebro.json` na raiz do projeto.
+Além da pasta, o plugin escreve o mesmo bloco de instruções no `CLAUDE.md` (Claude Code) e no `AGENTS.md`
+(Codex, Cursor, Hermes e outros), entre marcadores e sem mexer no resto dos arquivos, e cria
+`.segundo-cerebro.json` na raiz do projeto.
 
 ## O que acontece sozinho
 
-O plugin traz dois hooks. Eles **só agem em projetos que têm `.segundo-cerebro.json`**; nos outros, não fazem nada.
+Os hooks **só agem em projetos que têm `.segundo-cerebro.json`**; nos outros, não fazem nada. É um script só
+(`scripts/sincronizar.mjs`), que reconhece qual ferramenta o chamou e responde no formato dela.
 
-**No início de cada sessão:** lembra o Claude da rotina (ler o contexto, a ficha e as decisões antes;
+**No início de cada sessão:** lembra o agente da rotina (ler o contexto, a ficha e as decisões antes;
 registrar depois) e avisa se a última sincronização falhou.
 
-**Ao fim de cada resposta do Claude:**
+**Ao fim de cada resposta do agente:**
 1. **Confere a memória.** Se houve trabalho fora do cérebro sem linha nova no `log.md`, se uma pasta
-   exigida está sem ficha ou se sobrou marcador de conflito, o hook devolve a tarefa ao Claude, que
+   exigida está sem ficha ou se sobrou marcador de conflito, o hook devolve a tarefa ao agente, que
    corrige antes de encerrar. Ele só bloqueia uma vez por resposta, então nunca entra em loop.
 2. **Procura segredos.** Se achar algo com cara de chave de API, token ou chave privada no que vai ser
    publicado, não publica nada e avisa.
 3. **Publica.** Faz commit de tudo, traz o que outras máquinas publicaram (`rebase`, nunca força) e faz push.
 
-Se algo falhar por rede ou permissão, o aviso aparece no início da próxima sessão e o Claude resolve primeiro.
+Se algo falhar por rede ou permissão, o aviso aparece no início da próxima sessão e o agente resolve primeiro.
 
 ## Configuração
 
@@ -155,19 +202,18 @@ Para desligar num projeto, apague `.segundo-cerebro.json`. Para desligar em tudo
 Para ter backup, conecte um repositório privado: `git remote add origin <url>`. Sem remoto, tudo fica no
 commit local.
 
-## Outros agentes (Codex, Cursor…)
+## Agentes sem hooks
 
-Os hooks são do Claude Code. Peça para criar o cérebro com `--agents` (ou tenha um `AGENTS.md` no projeto)
-e o mesmo bloco de instruções vai para o `AGENTS.md`. Fora do Claude Code, a conferência pode ser rodada à mão:
+Qualquer agente que leia `AGENTS.md` segue a rotina. Para conferir e publicar sem hook, rode no projeto:
 
 ```bash
-node <pasta do plugin>/scripts/sincronizar.mjs --manual
+node ~/.segundo-cerebro/scripts/sincronizar.mjs --manual
 ```
 
 ## Desenvolvimento
 
 ```bash
-npm test                          # 9 testes com repositórios git temporários
+npm test                          # 14 testes: Claude/Codex, Cursor, Hermes e o instalador
 claude plugin validate .          # valida o marketplace e o plugin
 claude --plugin-dir .             # testa o plugin local sem instalar
 ```

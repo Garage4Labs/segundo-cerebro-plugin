@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Monta o segundo cérebro num projeto. Nunca sobrescreve arquivo que já existe; pode rodar de novo sem medo.
 //   node criar.mjs [--dir <projeto>] [--pasta segundo-cerebro] [--nome "Minha Empresa"]
-//                  [--publicar push|commit|nao] [--fichas app,site] [--agents]
+//                  [--publicar push|commit|nao] [--fichas app,site]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,10 +49,10 @@ const config = { ...anterior, pasta, publicar, pastasComFicha, ignorar: anterior
 fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
 (Object.keys(anterior).length ? mantidos : criados).push('.segundo-cerebro.json');
 
-// 3. instruções no CLAUDE.md (e no AGENTS.md, para Codex e outros agentes), entre marcadores
-function instruir(arquivo, modelo) {
+// 3. instruções no CLAUDE.md (Claude Code) e no AGENTS.md (Codex, Cursor, Hermes), entre marcadores
+function instruir(arquivo) {
   const alvo = path.join(dir, arquivo);
-  const bloco = `${INICIO}\n${trocar(fs.readFileSync(path.join(MODELO, modelo), 'utf8')).trim()}\n${FIM}`;
+  const bloco = `${INICIO}\n${trocar(fs.readFileSync(path.join(MODELO, 'instrucoes.md'), 'utf8')).trim()}\n${FIM}`;
   const atual = fs.existsSync(alvo) ? fs.readFileSync(alvo, 'utf8') : '';
   const i = atual.indexOf(INICIO);
   const j = atual.indexOf(FIM);
@@ -61,8 +61,8 @@ function instruir(arquivo, modelo) {
   if (novo !== atual) { fs.writeFileSync(alvo, novo); criados.push(`${arquivo} (bloco do segundo cérebro)`); }
   else mantidos.push(arquivo);
 }
-instruir('CLAUDE.md', 'instrucoes-claude.md');
-if (argv.includes('--agents') || fs.existsSync(path.join(dir, 'AGENTS.md'))) instruir('AGENTS.md', 'instrucoes-agents.md');
+instruir('CLAUDE.md');
+instruir('AGENTS.md');
 
 const git = fs.existsSync(path.join(dir, '.git'));
 console.log(JSON.stringify({ projeto: dir, pasta, publicar, pastasComFicha, git, criados, mantidos }, null, 2));

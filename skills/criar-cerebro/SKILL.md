@@ -37,12 +37,12 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/criar.mjs" --dir "<raiz do projeto>" --nome 
 ```
 
 Se `${CLAUDE_PLUGIN_ROOT}` não estiver definido no terminal, o script fica em `../../scripts/criar.mjs`
-a partir da pasta desta skill. Use `--agents` para também escrever as instruções no `AGENTS.md`
-(Codex e outros agentes); ele já é atualizado sozinho se existir.
+a partir da pasta desta skill (no plugin) ou em `~/.segundo-cerebro/scripts/criar.mjs` (instalação para
+Cursor e Hermes).
 
-O script cria a pasta do cérebro, o `.segundo-cerebro.json` e um bloco de instruções no `CLAUDE.md`
-entre `<!-- segundo-cerebro:inicio -->` e `<!-- segundo-cerebro:fim -->`. Rodar de novo só atualiza
-esse bloco e a configuração.
+O script cria a pasta do cérebro, o `.segundo-cerebro.json` e o mesmo bloco de instruções no `CLAUDE.md`
+(Claude Code) e no `AGENTS.md` (Codex, Cursor, Hermes), entre `<!-- segundo-cerebro:inicio -->` e
+`<!-- segundo-cerebro:fim -->`. Rodar de novo só atualiza esse bloco e a configuração.
 
 ## 4. Preencher o contexto (entrevista curta)
 O cérebro só vale o que tem dentro. Faça no máximo cinco perguntas, em uma ou duas rodadas, para
@@ -65,3 +65,5 @@ quando houver (é o que a conferência de fichas procura).
   "o que já decidimos sobre X?".
 - Os hooks valem a partir de agora: o `.segundo-cerebro.json` é o que os liga. Para desligar,
   basta apagar esse arquivo.
+- Se o usuário também usa Cursor ou Hermes no mesmo projeto, lembre que eles precisam do instalador
+  (`instalar.sh` ou `instalar.ps1`, no README do plugin) para ter os mesmos hooks e skills.

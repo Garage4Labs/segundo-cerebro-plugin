@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "segundo-cerebro",
-  "description": "Segundo cérebro para o Claude Code, em português, da Garage4Lab.",
+  "description": "Segundo cérebro para agentes de IA (Claude Code, Codex, Cursor, Hermes), em português, da Garage4Lab.",
   "owner": { "name": "Garage4Lab", "url": "https://github.com/Garage4Labs" },
   "plugins": [
     {

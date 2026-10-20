@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 // Confere e publica o segundo cérebro do projeto. Só age onde existe .segundo-cerebro.json
 // (criado pela skill criar-cerebro); nos outros projetos sai em silêncio.
-//   node sincronizar.mjs            hook Stop: confere, faz commit e push (lê o JSON do hook no stdin)
-//   node sincronizar.mjs --status   hook SessionStart: lembra a rotina e avisa se a última sincronização falhou
-//   node sincronizar.mjs --manual   o mesmo que o hook Stop, com saída em texto (terminal ou agentes sem hooks)
+//   node sincronizar.mjs            hook de fim de resposta: confere, faz commit e push (lê o JSON do hook no stdin)
+//   node sincronizar.mjs --status   hook de início de sessão: lembra a rotina e avisa se a última sincronização falhou
+//   node sincronizar.mjs --manual   o mesmo que o fim de resposta, com saída em texto (terminal ou agentes sem hooks)
+// O agente é reconhecido pelo JSON do hook, e a resposta sai no formato dele:
+//   Claude Code e Codex  SessionStart / Stop          (mesmo formato)
+//   Cursor               sessionStart / stop          (workspace_roots, loop_count, followup_message)
+//   Hermes               pre_llm_call / pre_verify / post_llm_call   (profile, extra)
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -20,6 +24,13 @@ const SEGREDOS = [
 const args = new Set(process.argv.slice(2));
 let hook = {};
 if (!args.has('--manual')) { try { hook = JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); } catch { hook = {}; } }
+const evento = hook.hook_event_name || '';
+const extra = hook.extra || {};
+const agente = hook.workspace_roots || hook.cursor_version ? 'cursor' : ('profile' in hook || hook.extra) ? 'hermes' : 'claude';
+const modoStatus = args.has('--status') || /^session_?start$/i.test(evento) || evento === 'pre_llm_call';
+// no Hermes só o pre_verify pode pedir correção (e só confere); o post_llm_call publica sem bloquear
+const soConferir = evento === 'pre_verify';
+const podeBloquear = agente !== 'hermes' || soConferir;
 
 // raiz do projeto: a pasta que tem .segundo-cerebro.json, subindo a partir de onde o Claude está
 function acharRaiz(inicio) {
@@ -28,7 +39,7 @@ function acharRaiz(inicio) {
     if (path.dirname(d) === d) return null;
   }
 }
-const ROOT = acharRaiz(process.env.CLAUDE_PROJECT_DIR || hook.cwd || process.cwd());
+const ROOT = acharRaiz(process.env.CLAUDE_PROJECT_DIR || process.env.CURSOR_PROJECT_DIR || hook.cwd || hook.workspace_roots?.[0] || process.cwd());
 if (!ROOT) {
   if (args.has('--manual')) console.log(`Nenhum ${CONFIG} encontrado: rode a skill criar-cerebro neste projeto primeiro.`);
   process.exit(0);
@@ -50,26 +61,33 @@ const STATE_FILE = gitDir ? path.join(gitDir, 'segundo-cerebro.json') : path.joi
 const lerEstado = () => { try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch { return {}; } };
 const gravarEstado = (s) => { fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true }); fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2)); };
 
-// ---------- --status (SessionStart) ----------
-if (args.has('--status')) {
+// ---------- início de sessão ----------
+if (modoStatus) {
   const rotina = `Este projeto tem um segundo cérebro em \`${PASTA}/\`. Antes de uma tarefa, leia \`${PASTA}/contexto/\`, ` +
     `a ficha do projeto em \`${PASTA}/projetos/\` e \`${PASTA}/memoria/decisoes.md\`. Depois de uma tarefa relevante, registre uma linha em ` +
     `\`${LOG}\` e, se houver, a decisão (com o porquê) em \`decisoes.md\` e o aprendizado em \`aprendizados.md\`. ` +
-    'Ao fim de cada resposta, o hook do plugin segundo-cerebro confere a memória e publica; se ele bloquear, corrija o que pedir.';
+    'Ao fim de cada resposta, o hook do segundo cérebro confere a memória e publica; se ele pedir correção, corrija.';
   const u = lerEstado().ultimo;
   const quando = u && new Date(u.quando).toLocaleString('pt-BR');
   const falhou = u && !u.ok;
-  console.log(JSON.stringify({
-    ...(u ? { systemMessage: falhou ? `⚠️ A última sincronização do segundo cérebro (${quando}) falhou: ${u.problemas.join(' · ')}`
-      : `✅ Segundo cérebro sincronizado em ${quando}${u.commit ? ` (${u.commit})` : ''}.` } : {}),
-    hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: rotina + (falhou
-      ? ` A última sincronização falhou (${quando}): ${u.problemas.join(' | ')}. Antes de outra tarefa, resolva o problema ` +
-        'e conte ao usuário em uma linha; a próxima resposta sincroniza de novo.' : '') },
-  }));
+  const aviso = falhou ? ` A última sincronização falhou (${quando}): ${u.problemas.join(' | ')}. Antes de outra tarefa, resolva o problema ` +
+    'e conte ao usuário em uma linha; a próxima resposta sincroniza de novo.' : '';
+  if (agente === 'cursor') console.log(JSON.stringify({ additional_context: rotina + aviso }));
+  else if (agente === 'hermes') {
+    // pre_llm_call roda a cada mensagem: a rotina já vem do AGENTS.md, então só a falha, e só na primeira
+    if (falhou && extra.is_first_turn !== false) console.log(JSON.stringify({ context: aviso.trim() }));
+  } else {
+    console.log(JSON.stringify({
+      ...(u ? { systemMessage: falhou ? `⚠️ A última sincronização do segundo cérebro (${quando}) falhou: ${u.problemas.join(' · ')}`
+        : `✅ Segundo cérebro sincronizado em ${quando}${u.commit ? ` (${u.commit})` : ''}.` } : {}),
+      hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: rotina + aviso },
+    }));
+  }
   process.exit(0);
 }
 
-const segundaVolta = Boolean(hook.stop_hook_active);
+// já pediu correção uma vez nesta resposta? então não bloqueia de novo (nunca entra em loop)
+const segundaVolta = Boolean(hook.stop_hook_active) || hook.loop_count > 0 || extra.attempt > 0 || !podeBloquear;
 const estado = lerEstado();
 const corrigir = []; // o Claude consegue resolver: o hook o obriga a resolver antes de encerrar
 const falhas = []; // infraestrutura (rede, permissão): vira aviso no início da próxima sessão
@@ -83,9 +101,10 @@ function terminar() {
     : `⚠️ Segundo cérebro: ${[...corrigir, ...falhas].join(' · ')}${feito.length ? ` (feito: ${feito.join(' · ')})` : ''}`;
   if (args.has('--manual')) { console.log(resumo || '✅ Nada a publicar: tudo em dia.'); process.exit(ok ? 0 : 1); }
   if (corrigir.length && !segundaVolta) {
-    console.log(JSON.stringify({ decision: 'block', reason:
-      `Segundo cérebro: corrija antes de encerrar (a publicação acontece sozinha depois):\n- ${corrigir.join('\n- ')}` }));
-  } else if (resumo) console.log(JSON.stringify({ systemMessage: resumo }));
+    const reason = `Segundo cérebro: corrija antes de encerrar (a publicação acontece sozinha depois):\n- ${corrigir.join('\n- ')}`;
+    console.log(JSON.stringify(agente === 'cursor' ? { followup_message: reason } : { decision: 'block', reason }));
+  } else if (resumo && agente === 'claude') console.log(JSON.stringify({ systemMessage: resumo }));
+  else if (agente === 'cursor') console.log('{}');
   process.exit(0);
 }
 
@@ -141,7 +160,11 @@ if (trabalho.length && !mudou.has(LOG)) {
     `Se a mudança não veio desta conversa, registre assim mesmo o que mudou, sem inventar o motivo; se não deve ser publicada, ponha no .gitignore ou em "ignorar" no ${CONFIG}`);
 }
 
-if (corrigir.length && !segundaVolta) terminar();
+if ((corrigir.length && !segundaVolta) || soConferir) {
+  // no pre_verify do Hermes não grava estado: quem registra o resultado é o post_llm_call
+  if (soConferir && !corrigir.length) process.exit(0);
+  terminar();
+}
 
 // ---------- 2. commit, com busca de segredos ----------
 if (cfg.publicar !== 'nao') {
