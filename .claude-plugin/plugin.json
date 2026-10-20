@@ -1,0 +1,10 @@
+{
+  "name": "segundo-cerebro",
+  "version": "1.0.0",
+  "description": "Segundo cérebro em Markdown para o Claude Code: contexto, projetos e memória que o Claude lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
+  "author": { "name": "Garage4Lab", "url": "https://github.com/Garage4Labs" },
+  "homepage": "https://github.com/Garage4Labs/segundo-cerebro-plugin",
+  "repository": "https://github.com/Garage4Labs/segundo-cerebro-plugin",
+  "license": "MIT",
+  "keywords": ["segundo-cerebro", "second-brain", "memoria", "contexto", "pt-br"]
+}

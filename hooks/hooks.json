@@ -1,0 +1,27 @@
+{
+  "description": "Confere e publica o segundo cérebro ao fim de cada resposta; mostra o último resultado no início da sessão. Só age em projetos com .segundo-cerebro.json.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/sincronizar.mjs\" --status",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/sincronizar.mjs\"",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

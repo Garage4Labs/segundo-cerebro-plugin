@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "segundo-cerebro",
+  "description": "Segundo cérebro para o Claude Code, em português, da Garage4Lab.",
+  "owner": { "name": "Garage4Lab", "url": "https://github.com/Garage4Labs" },
+  "plugins": [
+    {
+      "name": "segundo-cerebro",
+      "description": "Contexto, projetos e memória em Markdown que o Claude lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
+      "source": "./"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "segundo-cerebro-plugin",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test testes/*.test.mjs" },
+  "engines": { "node": ">=18" }
+}
