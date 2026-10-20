@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "segundo-cerebro",
-      "description": "Contexto, projetos e memória em Markdown que o Claude lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
+      "description": "Contexto, projetos e memória em Markdown que o agente lê antes de trabalhar e atualiza depois, com conferência e publicação automáticas no git.",
       "source": "./"
     }
   ]
